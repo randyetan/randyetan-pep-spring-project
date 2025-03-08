@@ -1,4 +1,11 @@
 package com.example.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import com.example.entity.Message;
+import com.example.repository.MessageRepository;
+
 /*
  * "have a bean for the AccountService, MessageService, AccountRepository, MessageRepository, and SocialMediaController classes"
  * Create New Message
@@ -47,4 +54,46 @@ As a user, I should be able to submit a GET request on the endpoint GET localhos
 The response body should contain a JSON representation of a list containing all messages posted by a particular user, which is retrieved from the database. It is expected for the list to simply be empty if there are no messages. The response status should always be 200, which is the default
  */
 public class MessageService {
+
+    private final MessageRepository messageRepository;
+
+    public MessageService(MessageRepository messageRepository) {
+        this.messageRepository = messageRepository;
+    }
+
+    public Message createMessage(Message message){
+        return messageRepository.save(message);
+    }
+
+    public List<Message> getAllMessages() {
+        return messageRepository.findAll();
+    }
+
+    public Message getMessageById(int message_id) {
+        return messageRepository.getById(message_id);
+    }
+
+    public boolean deleteMessageById(int message_id) {
+        if(messageRepository.existsById(message_id)) {
+            messageRepository.deleteById(message_id);
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean updateMessage(int message_id, String message_text) {
+        Optional<Message> exists = messageRepository.findById(message_id);
+        if(exists != null && message_text != null) {
+            Message message = exists.get();
+            message.setMessageText(message_text);
+            messageRepository.save(message);
+            return true;
+        }
+        return false;
+    }
+
+    public List<Message> getMessagesByUserId(int account_id) {
+        return messageRepository.findByPostedBy(account_id);
+    }
 }
