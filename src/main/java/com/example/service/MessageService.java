@@ -62,6 +62,9 @@ public class MessageService {
     }
 
     public Message createMessage(Message message){
+        if(message.getMessageText().isEmpty() || message.getMessageText().length() > 255) {
+            return null;
+        }
         return messageRepository.save(message);
     }
 
