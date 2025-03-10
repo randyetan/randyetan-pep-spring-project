@@ -1,13 +1,17 @@
 package com.example.controller;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.example.entity.Account;
 import com.example.entity.Message;
@@ -22,6 +26,7 @@ import com.example.service.MessageService;
  * 
  * "have a bean for the AccountService, MessageService, AccountRepository, MessageRepository, and SocialMediaController classes"
  */
+@RestController
 public class SocialMediaController {
 
     @Autowired
@@ -42,12 +47,43 @@ public class SocialMediaController {
 
     @PostMapping("/messages")
     public ResponseEntity<Message> createMessage(@RequestBody Message message) {
+
+        if(message.getMessageText().isEmpty() || message.getMessageText().length() > 255) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        if(accountService.getAccountById(message.getPostedBy()).orElse(null) == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
         return ResponseEntity.ok(messageService.createMessage(message));
+    }
+
+    @DeleteMapping("/messages/{id}")
+    public ResponseEntity<Integer> deleteMessageById(@PathVariable Integer id) {
+        Message deleteMessage = messageService.getMessageById(id);
+
+        if(deleteMessage != null) {
+            messageService.deleteMessageById(id);
+            return ResponseEntity.status(HttpStatus.OK).body(1);
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    @GetMapping("/messages")
+    public ResponseEntity<List<Message>> getAllMessages() {
+        return ResponseEntity.ok(messageService.getAllMessages());
     }
 
     @GetMapping("/messages/{id}")
     public ResponseEntity<Message> getMessageById(@PathVariable Integer id) {
         return ResponseEntity.ok(messageService.getMessageById(id));
+    }
+
+    public ResponseEntity<List<Message>> getMessagesByUserId(@PathVariable Integer id) {
+        List<Message> messages = messageService.getMessagesByUserId(id);
+        return ResponseEntity.status(HttpStatus.OK).body(messages);
     }
 
 }
