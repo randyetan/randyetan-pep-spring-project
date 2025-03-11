@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.example.entity.Message;
@@ -54,7 +56,8 @@ If the update of the message is not successful for any reason, the response stat
 * Get All Messages From User Given Account Id
 As a user, I should be able to submit a GET request on the endpoint GET localhost:8080/accounts/{account_id}/messages.
 
-The response body should contain a JSON representation of a list containing all messages posted by a particular user, which is retrieved from the database. It is expected for the list to simply be empty if there are no messages. The response status should always be 200, which is the default
+The response body should contain a JSON representation of a list containing all messages posted by a particular user, which is retrieved from the database. It is expected for the list to simply be empty if there are no messages. 
+The response status should always be 200, which is the default
  */
 @Service
 public class MessageService {
@@ -91,14 +94,19 @@ public class MessageService {
     }
 
     public boolean updateMessage(int message_id, String message_text) {
-        Optional<Message> exists = messageRepository.findById(message_id);
-        if(exists != null && message_text != null) {
-            Message message = exists.get();
-            message.setMessageText(message_text);
-            messageRepository.save(message);
-            return true;
+        
+        if(message_text == null || message_text.isEmpty() || message_text.trim().isEmpty() || message_text.trim().isBlank() || message_text.length() > 255) {
+            return false;
         }
-        return false;
+        
+        Optional<Message> exists = messageRepository.findById(message_id);
+        if(!exists.isPresent()) {
+            return false;
+        }
+        Message message = exists.get();
+        message.setMessageText(message_text);
+        messageRepository.save(message);
+        return true;
     }
 
     public List<Message> getMessagesByUserId(int id) {
